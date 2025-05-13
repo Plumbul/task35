@@ -43,11 +43,22 @@ void algoritm_bfs(vector<vector<char>> &test_task0, int row_start, int col_start
 
         while(row_current != row_start || col_current != col_start){
             if(test_task0[row_current][col_current] != '1'){
-                result[row_current][col_current] = '*';
-            }
+                int parent_cell_index = parent[row_current][col_current];
+                int row_parent = parent_cell_index / cols;
+                int col_parent = parent_cell_index % cols;
+
+                if(row_parent == row_current){
+                    result[row_current][col_current] = '-';
+                    } else {
+                    result[row_current][col_current] = '|';
+                    }
+                    row_current = row_parent;
+                    col_current = col_parent;
+                } else {
             int parent_cell_index = parent[row_current][col_current];
             row_current = parent_cell_index / cols;
             col_current = parent_cell_index % cols;
+                }
         }
     }
 }
