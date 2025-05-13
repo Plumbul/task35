@@ -42,7 +42,7 @@ void algoritm_bfs(vector<vector<char>> &test_task0, int row_start, int col_start
         int col_current = col_end;
 
         while(row_current != row_start || col_current != col_start){
-            if(test_task0[row_current][col_current] != '1'){
+            if(test_task0[row_current][col_current] == '0'){
                 int parent_cell_index = parent[row_current][col_current];
                 int row_parent = parent_cell_index / cols;
                 int col_parent = parent_cell_index % cols;
@@ -64,8 +64,8 @@ void algoritm_bfs(vector<vector<char>> &test_task0, int row_start, int col_start
 }
 
 int main() {
-    int rows = 3;
-    int cols = 3;
+    int rows = 10;
+    int cols = 10;
     /* int test_task0[10][10] = {
     {1, 0, 0, 0, 0, 0, 0, 0, 2, 3},
     {0, 0, 0, 0, 0, 0, 0, 4, 0, 0},
@@ -78,7 +78,6 @@ int main() {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
     };
-    */
 
     char test_task1[10][10] = {
         {'.', '.', '.', '.', 'E', '.', '.', '.', 'D'},
@@ -105,28 +104,44 @@ int main() {
         {'.', '.', '.', '.', '.', '.', '.', '.', 'B', '.'},
         {'B', '.', '.', '.', 'E', '.', '.', '.', '.', '.'}
     };
-
+    */
     vector<vector<char>> test_task0 = {
-        {'0','0','1'},
-        {'0','0','0'},
-        {'1','0','0'},
+        {'1', '0', '0', '0', '0', '0', '0', '0', '0', '1'},
+        {'0', '0', '3', '0', '0', '0', '0', '0', '0', '0'},
+        {'0', '0', '0', '0', '0', '0', '0', '0', '0', '0'},
+        {'2', '0', '0', '0', '2', '0', '0', '0', '0', '0'},
+        {'0', '0', '0', '0', '0', '0', '0', '0', '0', '0'},
+        {'0', '0', '3', '0', '0', '0', '0', '0', '0', '0'},
+        {'0', '0', '0', '0', '0', '0', '0', '0', '0', '0'},
+        {'0', '0', '0', '0', '0', '0', '0', '0', '0', '0'},
+        {'0', '0', '0', '0', '0', '0', '0', '0', '0', '0'},
+        {'0', '0', '0', '0', '0', '0', '0', '0', '0', '0'},
     };
+
+    vector<char>symbols_pair = {'1','2','3'};
 
     vector<vector<char>> result = test_task0;
 
-    pair<int,int> start = {-1,-1}, end = {-1,-1};
+    for(char symbol : symbols_pair){
+        vector<pair<int,int>>symbols_position;
 
-    for(int i = 0; i < rows; i++){
-        for(int j = 0; j < cols; j++){
-            if(test_task0[i][j] == '1'){
-                if(start == make_pair(-1,-1)){
-                    start = {i,j};
-                } else {
-                    end = {i,j};
+        for(int i = 0; i < rows; i++){
+            for(int j = 0; j < cols; j++){
+                if(test_task0[i][j] == symbol){
+                    symbols_position.push_back({i, j});
                 }
             }
         }
-    }
+
+        if(symbols_position.size() >= 2) {
+            for(size_t i=0; i+1<symbols_position.size(); i+=2){
+                auto[row_start, col_start] = symbols_position[i];
+                auto[row_end, col_end] = symbols_position[i+1];
+                algoritm_bfs(test_task0, row_start, col_start, row_end, col_end, 
+                    rows, cols, result);
+            }
+        }
+    } 
 
     cout << "test_task0:" << endl;
     for(auto row : test_task0) {
@@ -134,11 +149,6 @@ int main() {
             cout << cell << " ";
         }
         cout << endl;
-    }
-
-    if(start != make_pair(-1,-1) && end != make_pair (-1,-1)) {
-        algoritm_bfs(test_task0, start.first, start.second, end.first, end.second, 
-                    rows, cols, result);
     }
 
     cout << "result:" << endl;
