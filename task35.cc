@@ -5,7 +5,7 @@
 
 using namespace std;
 
-void algoritm_bfs(vector<vector<char>> &test_task0, int row_start, int col_start, int row_end, int col_end, 
+bool algoritm_bfs(vector<vector<char>> &test_task0, int row_start, int col_start, int row_end, int col_end, 
                     int rows, int cols, vector<vector<char>> &result){
     queue<pair<int,int>> q;
 
@@ -42,25 +42,23 @@ void algoritm_bfs(vector<vector<char>> &test_task0, int row_start, int col_start
         int col_current = col_end;
 
         while(row_current != row_start || col_current != col_start){
-            if(result[row_current][col_current] == '0'){
-                int parent_cell_index = parent[row_current][col_current];
-                int row_parent = parent_cell_index / cols;
-                int col_parent = parent_cell_index % cols;
-
+            int parent_cell_index = parent[row_current][col_current];
+            int row_parent = parent_cell_index / cols;
+            int col_parent = parent_cell_index % cols;
+            
+            if(result[row_parent][col_parent] == '0'){
                 if(row_parent == row_current){
-                    result[row_current][col_current] = '-';
+                    result[row_parent][col_parent] = '-';
                     } else {
-                    result[row_current][col_current] = '|';
+                    result[row_parent][col_parent] = '|';
                     }
+                }
                     row_current = row_parent;
                     col_current = col_parent;
-                } else {
-            int parent_cell_index = parent[row_current][col_current];
-            row_current = parent_cell_index / cols;
-            col_current = parent_cell_index % cols;
-                }
         }
+        return true;
     }
+    return false;
 }
 
 int main() {
@@ -106,13 +104,13 @@ int main() {
     };
     */
     vector<vector<char>> test_task0 = {
-        {'1', '0', '0', '0', '0', '0', '0', '0', '0', '1'},
-        {'0', '0', '3', '0', '0', '0', '0', '0', '0', '0'},
+        {'0', '0', '0', '0', '0', '2', '0', '0', '2', '3'},
+        {'0', '0', '0', '0', '0', '0', '0', '1', '0', '0'},
         {'0', '0', '0', '0', '0', '0', '0', '0', '0', '0'},
-        {'2', '0', '0', '0', '2', '0', '0', '0', '0', '0'},
+        {'0', '0', '0', '0', '0', '3', '0', '0', '0', '0'},
         {'0', '0', '0', '0', '0', '0', '0', '0', '0', '0'},
-        {'0', '0', '3', '0', '0', '0', '0', '0', '0', '0'},
         {'0', '0', '0', '0', '0', '0', '0', '0', '0', '0'},
+        {'0', '0', '0', '0', '0', '0', '0', '0', '0', '1'},
         {'0', '0', '0', '0', '0', '0', '0', '0', '0', '0'},
         {'0', '0', '0', '0', '0', '0', '0', '0', '0', '0'},
         {'0', '0', '0', '0', '0', '0', '0', '0', '0', '0'},
@@ -122,26 +120,47 @@ int main() {
 
     vector<vector<char>> result = test_task0;
 
-    for(char symbol : symbols_pair){
-        vector<pair<int,int>>symbols_position;
+    bool algoritm_retry = true;
 
-        for(int i = 0; i < rows; i++){
-            for(int j = 0; j < cols; j++){
-                if(result[i][j] == symbol){
-                    symbols_position.push_back({i, j});
+    while(algoritm_retry){
+        algoritm_retry = false;
+        result = test_task0;
+        char symbol_fail = 0;
+
+        for(size_t a = 0; a < symbols_pair.size(); a++){
+            char symbol = symbols_pair[a];
+            vector<pair<int,int>>symbols_position;
+
+            for(int i = 0; i < rows; i++){
+                for(int j = 0; j < cols; j++){
+                    if(result[i][j] == symbol){
+                        symbols_position.push_back({i, j});
+                    }
+                }
+            }
+
+        if(symbols_position.size() >= 2) {
+            for(size_t b=0; b+1<symbols_position.size(); b+=2){
+                auto[row_start, col_start] = symbols_position[b];
+                auto[row_end, col_end] = symbols_position[b+1];
+
+                bool algoritm_sucess = algoritm_bfs(result, row_start, col_start, row_end, col_end, 
+                    rows, cols, result);
+
+                if(!algoritm_sucess) {
+                    symbol_fail = symbol;
+                    algoritm_retry = true;
+                    break;
                 }
             }
         }
-
-        if(symbols_position.size() >= 2) {
-            for(size_t i=0; i+1<symbols_position.size(); i+=2){
-                auto[row_start, col_start] = symbols_position[i];
-                auto[row_end, col_end] = symbols_position[i+1];
-                algoritm_bfs(test_task0, row_start, col_start, row_end, col_end, 
-                    rows, cols, result);
-            }
+        if (algoritm_retry) {
+            symbols_pair.erase(symbols_pair.begin() + a);
+            symbols_pair.insert(symbols_pair.begin(), symbol_fail);
+            break;
         }
-    } 
+    }
+}
 
     cout << "test_task0:" << endl;
     for(auto row : test_task0) {
