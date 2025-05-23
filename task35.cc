@@ -329,7 +329,7 @@ public:
             cout << "1 - User input \n";
             cout << "2 - Program input \n";
             cout << "3 - Exit \n";
-            cout << "Choice : \n";
+            cout << "Choice: \n";
             int choice;
             cin >> choice;
 
