@@ -224,18 +224,43 @@ public:
     ----------------------------------------------------------------------------------------[>]-*/
 class Input {
 public:
-    void input_user(Field &field, vector<char> &symbol_pairs) {
+  void input_user(Field &field, vector<char> &symbol_pairs) {
         int rows, cols;
-        cout << "Enter number of rows (number must be positive): ";
-        cin >> rows;
-        cout << "Enter number of columns (number must be positive): ";
-        cin >> cols;
-        cin.ignore();
+        string input;
+        bool valid_input = false;
 
-        if (rows <= 0 || cols <= 0) {
-            cout << "Invalid dimensions: rows and columns must be positive.\n";
-            return;
+        while (!valid_input) {
+            cout << "Enter number of rows (number must be positive): ";
+            cin >> input;
+            try {
+                rows = stoi(input);
+                if (rows <= 0) {
+                    cout << "Invalid input. Number of rows must be positive.\n";
+                } else {
+                    valid_input = true;
+                }
+            } catch (...) {
+                cout << "Invalid input. Please enter a valid number for rows.\n";
+            }
         }
+
+        valid_input = false;
+        while (!valid_input) {
+            cout << "Enter number of columns (number must be positive): ";
+            cin >> input;
+            try {
+                cols = stoi(input);
+                if (cols <= 0) {
+                    cout << "Invalid input. Number of columns must be positive.\n";
+                } else {
+                    valid_input = true;
+                }
+            } catch (...) {
+                cout << "Invalid input. Please enter a valid number for columns.\n";
+            }
+        }
+        
+        cin.ignore();
 
         Field user_field(rows, cols);
         cout << "Enter field. Separate each cell by space. Fill empty cells as dots (e.g. . . A . A .) :\n";
@@ -311,14 +336,14 @@ private:
     Algoritm alg;
     Field task1, task2;
     vector<char> symbol_pairs1, symbol_pairs2;
-    map<char, vector<Shift>> shifts1, shifts2;
+    map<char, vector<Shift>> shifts1, shifts2, shifts0;
 
 public:
     Menu(const vector<vector<char>> &test_task1, const vector<char> &symbols_pair1,
          const vector<vector<char>> &test_task2, const vector<char> &symbols_pair2,
-         const map<char, vector<Shift>> &symbol_shifts1, const map<char, vector<Shift>> &symbol_shifts2)
+         const map<char, vector<Shift>> &symbol_shifts1, const map<char, vector<Shift>> &symbol_shifts2, const map<char, vector<Shift>> &symbol_shifts0)
         : task1(test_task1.size(), test_task1[0].size()), task2(test_task2.size(), test_task2[0].size()),
-          symbol_pairs1(symbols_pair1), symbol_pairs2(symbols_pair2), shifts1(symbol_shifts1), shifts2(symbol_shifts2) {
+          symbol_pairs1(symbols_pair1), symbol_pairs2(symbols_pair2), shifts1(symbol_shifts1), shifts2(symbol_shifts2), shifts0(symbol_shifts0) {
         inp.input_program(task1, test_task1);
         inp.input_program(task2, test_task2);
     }
@@ -331,8 +356,27 @@ public:
             cout << "3 - Exit \n";
             cout << "Choice: \n";
             int choice;
-            cin >> choice;
+            string input;
+            bool valid_input = false;
 
+            while (!valid_input) {
+                cin >> input;
+                try {
+                    choice = stoi(input);
+                    if (choice < 1 || choice > 3) {
+                        cout << "Invalid choice. Please enter 1, 2, or 3.\n";
+                        cout << "Choice: \n";
+                    } else {
+                        valid_input = true;
+                    }
+                } catch (...) {
+                    cout << "Invalid input. Please enter a valid number (1, 2, or 3).\n";
+                    cout << "Choice: \n";
+                }
+            }
+
+            cin.ignore();
+            
             switch (choice) {
             case 1: {
                 Field field(1, 1);
@@ -340,7 +384,7 @@ public:
                 inp.input_user(field, symbol_pairs);
                 Field result = field;
                 string title = "User input";
-                alg.algoritm_retry(field, result, symbol_pairs, shifts1);
+                alg.algoritm_retry(field, result, symbol_pairs, shifts0);
                 out.print_field(title, field);
                 title = "Result of user input";
                 out.print_field(title, result);
@@ -365,6 +409,7 @@ public:
                 break;
             }
             case 3:
+                cout << "Program terminated";
                 return;
             default:
                 cout << "Invalid choice. Try again\n";
@@ -429,7 +474,9 @@ int main() {
         {'D', {{0, 0}}}
     };
 
-    Menu menu(test_task1, symbols_pair1, test_task2, symbols_pair2, symbol_shifts1, symbol_shifts2);
+    map<char, vector<Shift>> symbol_shifts0;
+
+    Menu menu(test_task1, symbols_pair1, test_task2, symbols_pair2, symbol_shifts1, symbol_shifts2, symbol_shifts0);
     menu.Menu_run();
 
     return 0;
