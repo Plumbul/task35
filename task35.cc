@@ -1,3 +1,17 @@
+
+/* ----------------------------------------------------------------<Header>-
+ Name: task35.cc
+ Title: Connect pairs of symbols in array by lines.
+ Group: TV-41
+ Student: Hlubokyi K.A.
+ Written: 2025-05-23
+ Revised: 
+ Description: Write an algorithm for solving the problem and implement it as an ANSI C++ program.
+            Draw a series of separate segments, each of which connects a pair of the same digits or letters. 
+            Only one line can go into each cell; between the centres of the cells, the line can only 
+            go horizontally or vertically.
+ ------------------------------------------------------------------</Header>-*/
+
 #include <iostream>
 #include <vector>
 #include <queue>
@@ -12,16 +26,17 @@ using namespace std;
 struct Shift {
     int row_start_shift;
     int col_start_shift;
-    int row_end_shift;
-    int col_end_shift;
 };
 
+/*  -------------------------------------------------------------------------------------------[<]-
+    Class: Field
+    Synopsis: Represents the field with methods to manage cells.
+    -------------------------------------------------------------------------------------------[>]-*/
 class Field {
 private:
     vector<vector<char>> field_play;
     int rows_num;
     int cols_num;
-    vector<char> symbol_pairs;
 
 public:
     Field(int rows, int cols) : rows_num(rows), cols_num(cols) {
@@ -41,14 +56,6 @@ public:
         return '.';
     }
 
-    void symbol_pairs_set(vector<char> &symbols) {
-        symbol_pairs = symbols;
-    }
-
-    vector<char> symbol_pairs_get() const {
-        return symbol_pairs;
-    }
-
     bool is_valid(int row, int col) const {
         return row >= 0 && row < rows_num && col >= 0 && col < cols_num;
     }
@@ -62,8 +69,16 @@ public:
     }
 };
 
+/*  ---------------------------------------------------------------------------------------------[<]-
+    Class: Algoritm
+    Synopsis: Connect symbol pairs by lines using BFS, iteration rotation and shifts of start points.
+    ---------------------------------------------------------------------------------------------[>]-*/
 class Algoritm {
 private:
+    /*  --------------------------------------------------------------------------------------[<]-
+    Function: algoritm_bfs
+    Synopsis: Implement algorithm for connection pairs of symbols by lines using BFS.
+    ------------------------------------------------------------------------------------------[>]-*/
     bool algoritm_bfs(Field &field, int row_start, int col_start, int row_end, int col_end, Field &result) {
         queue<pair<int, int>> q;
         vector<vector<bool>> visited(field.row_num_get(), vector<bool>(field.col_num_get(), false));
@@ -114,8 +129,13 @@ private:
         return false;
     }
 
+    /*  --------------------------------------------------------------------------------------[<]-
+    Function: algoritm_shift
+    Synopsis: Moves the starting point of a symbol pair to help algoritm_bfs connect them, 
+                using shifts to avoid obstacles and find routes.
+    ---------------------------------------------------------------------------------------[>]-*/
     bool algoritm_shift(Field &field, int row_start, int col_start, int row_end, int col_end, 
-                        int rows, int cols, Field &result, char symbol, map<char, vector<Shift>> &symbol_shifts) {
+                        Field &result, char symbol, map<char, vector<Shift>> &symbol_shifts) {
         if (symbol_shifts.find(symbol) == symbol_shifts.end()) {
             return false;
         }
@@ -123,42 +143,31 @@ private:
         for (const auto& shift : shifts) {
             int row_start_new = row_start + shift.row_start_shift;
             int col_start_new = col_start + shift.col_start_shift;
-            int row_end_new = row_end + shift.row_end_shift;
-            int col_end_new = col_end + shift.col_end_shift;
 
             if (!field.is_valid(row_start_new, col_start_new) || 
                 result.cell_get(row_start_new, col_start_new) != '.' ||
-                !field.is_valid(row_end_new, col_end_new) || 
-                field.cell_get(row_end_new, col_end_new) != symbol) {
+                !field.is_valid(row_end, col_end) || 
+                field.cell_get(row_end, col_end) != symbol) {
                 continue;
             }
 
-            if (!algoritm_bfs(field, row_start_new, col_start_new, row_end_new, col_end_new, result)) {
+            if (!algoritm_bfs(field, row_start_new, col_start_new, row_end, col_end, result)) {
                 continue;
             }
-
-            auto shift_route = [&](int start_row, int start_col, int row_shift, int col_shift) {
-                if (row_shift == 0 && col_shift == 0) return;
-                int shift_distance = max(abs(row_shift), abs(col_shift));
-                for (int i = 1; i <= shift_distance; i++) {
-                    int row = start_row + (row_shift * i + shift_distance - 1) / shift_distance;
-                    int col = start_col + (col_shift * i + shift_distance - 1) / shift_distance;
-                    if (field.is_valid(row, col) && result.cell_get(row, col) == '.') {
-                        result.cell_set(row, col, row_shift != 0 ? '|' : '-');
-                    }
-                }
-            };
-
-            shift_route(row_start, col_start, shift.row_start_shift, shift.col_start_shift);
-            shift_route(row_end, col_end, shift.row_end_shift, shift.row_end_shift);
-
+            if (!algoritm_bfs(field, row_start_new, col_start_new, row_start, col_start, result)) {
+                continue;
+            }
             return true;
         }
         return false;
     }
 
 public:
-    void algoritm_retry(Field &field, int rows, int cols, Field &result, const vector<char> &symbols_pair, 
+    /*  ---------------------------------------------------------------------------------------------[<]-
+    Function: algoritm_retry
+    Synopsis: Do iterative rotation of failed connection symbols to help function algoritm_bfs connect them.
+    ---------------------------------------------------------------------------------------------[>]-*/
+    void algoritm_retry(Field &field, Field &result, const vector<char> &symbols_pair, 
                         map<char, vector<Shift>> &symbol_shifts) {
         bool algoritm_bfs_retry = true;
         vector<char> symbols_pair_change = symbols_pair;
@@ -189,7 +198,7 @@ public:
                     }
 
                     bool algoritm_success = algoritm_shift(field, row_start, col_start, row_end, col_end, 
-                                                           rows, cols, result, symbol, symbol_shifts) 
+                                                         result, symbol, symbol_shifts) 
                                         || algoritm_bfs(field, row_start, col_start, row_end, col_end, result);
 
                     if (!algoritm_success) {
@@ -209,13 +218,17 @@ public:
     }
 };
 
+/*  ----------------------------------------------------------------------------------------[<]-
+    Class: Input
+    Synopsis: Handles user and program input for field.
+    ----------------------------------------------------------------------------------------[>]-*/
 class Input {
 public:
-    void input_user(Field &field) {
+    void input_user(Field &field, vector<char> &symbol_pairs) {
         int rows, cols;
-        cout << "Enter number of rows: ";
+        cout << "Enter number of rows (number must be positive): ";
         cin >> rows;
-        cout << "Enter number of columns: ";
+        cout << "Enter number of columns (number must be positive): ";
         cin >> cols;
         cin.ignore();
 
@@ -225,7 +238,7 @@ public:
         }
 
         Field user_field(rows, cols);
-        cout << "Enter field (separate each cell by space):\n";
+        cout << "Enter field. Separate each cell by space. Fill empty cells as dots (e.g. . . A . A .) :\n";
         for (int i = 0; i < rows; i++) {
             string line;
             getline(cin, line);
@@ -236,7 +249,7 @@ public:
                 row.push_back(input_ch);
             }
             if (row.size() != static_cast<size_t>(cols)) {
-                cout << "Invalid number of columns in row " << i + 1 << ".\n";
+                cout << "Invalid number of columns in row " << i + 1 << ". Try again. \n";
                 i--;
                 continue;
             }
@@ -245,8 +258,7 @@ public:
             }
         }
 
-        vector<char> symbol_pairs;
-
+        symbol_pairs.clear();
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
                 char cell = user_field.cell_get(i, j);
@@ -256,11 +268,10 @@ public:
                 }
             }
         }
-        user_field.symbol_pairs_set(symbol_pairs);
         field = user_field;
     }
 
-    void input_program(Field &field, const vector<vector<char>> &test_task, const vector<char> &symbol_pairs) {
+    void input_program(Field &field, const vector<vector<char>> &test_task) {
         int rows = test_task.size(), cols = test_task[0].size();
         Field user_field(rows, cols);
         for (int i = 0; i < rows; i++) {
@@ -268,11 +279,14 @@ public:
                 user_field.cell_set(i, j, test_task[i][j]);
             }
         }
-        user_field.symbol_pairs_set(const_cast<vector<char>&>(symbol_pairs));
         field = user_field;
     }
 };
 
+/*  -----------------------------------------------------------------------------------------[<]-
+    Class: Output
+    Synopsis: Handle display of field
+    -----------------------------------------------------------------------------------------[>]-*/
 class Output {
 public:
     void print_field(string &title, Field &field) {
@@ -286,6 +300,10 @@ public:
     }
 };
 
+/*  -----------------------------------------------------------------------------------------[<]-
+    Class: Menu
+    Synopsis: Manage using all of classes by giving user primal menu to interact with program
+    ----------------------------------------------------------------------------------------- [>]-*/
 class Menu {
 private:
     Input inp;
@@ -301,27 +319,28 @@ public:
          const map<char, vector<Shift>> &symbol_shifts1, const map<char, vector<Shift>> &symbol_shifts2)
         : task1(test_task1.size(), test_task1[0].size()), task2(test_task2.size(), test_task2[0].size()),
           symbol_pairs1(symbols_pair1), symbol_pairs2(symbols_pair2), shifts1(symbol_shifts1), shifts2(symbol_shifts2) {
-        inp.input_program(task1, test_task1, symbols_pair1);
-        inp.input_program(task2, test_task2, symbols_pair2);
+        inp.input_program(task1, test_task1);
+        inp.input_program(task2, test_task2);
     }
 
     void Menu_run() {
         while (true) {
+            cout << "Enter number of operation:\n";
             cout << "1 - User input \n";
             cout << "2 - Program input \n";
             cout << "3 - Exit \n";
+            cout << "Choice : \n";
             int choice;
             cin >> choice;
 
             switch (choice) {
             case 1: {
                 Field field(1, 1);
-                inp.input_user(field);
+                vector<char> symbol_pairs;
+                inp.input_user(field, symbol_pairs);
                 Field result = field;
-                int rows = field.row_num_get();
-                int cols = field.col_num_get();
                 string title = "User input";
-                alg.algoritm_retry(field, rows, cols, result, field.symbol_pairs_get(), shifts1);
+                alg.algoritm_retry(field, result, symbol_pairs, shifts1);
                 out.print_field(title, field);
                 title = "Result of user input";
                 out.print_field(title, result);
@@ -330,20 +349,16 @@ public:
             case 2: {
                 cout << "Solving of test task #1:\n";
                 Field result1 = task1;
-                int rows = task1.row_num_get();
-                int cols = task1.col_num_get();
                 string title = "Test task #1";
-                alg.algoritm_retry(task1, rows, cols, result1, symbol_pairs1, shifts1);
+                alg.algoritm_retry(task1, result1, symbol_pairs1, shifts1);
                 out.print_field(title, task1);
                 title = "Result of task #1";
                 out.print_field(title, result1);
 
-                cout << "Solving of test task #2:\n";
+                cout << "\nSolving of test task #2:\n";
                 Field result2 = task2;
-                rows = task2.row_num_get();
-                cols = task2.col_num_get();
                 title = "Test task #2";
-                alg.algoritm_retry(task2, rows, cols, result2, symbol_pairs2, shifts2);
+                alg.algoritm_retry(task2, result2, symbol_pairs2, shifts2);
                 out.print_field(title, task2);
                 title = "Result of task #2";
                 out.print_field(title, result2);
@@ -358,6 +373,11 @@ public:
     }
 };
 
+/*  --------------------------------------------------------------------------------------------------[<]-
+    Function: main
+    Synopsis: Initializes field, array with symbols of pairs, collection with shifts 
+                and run the program
+    ------------------------------------------------------------------------------------------------- [>]-*/
 int main() {
     vector<vector<char>> test_task1 = {
         {'.', '.', '.', '.', '.', 'E', '.', '.', '.', 'D'},
@@ -375,13 +395,13 @@ int main() {
     vector<char> symbols_pair1 = {'B', 'C', 'F', 'G', 'A', 'E', 'D'};
 
     map<char, vector<Shift>> symbol_shifts1 = {
-        {'B', {{0, -1, 0, 0}}},
-        {'C', {{0, -3, 0, 0}}},
-        {'E', {{0, 2, 0, 0}}},
-        {'F', {{0, -5, 0, 0}}},
-        {'G', {{0, -6, 0, 0}}},
-        {'A', {{0, 0, 1, 0}}},
-        {'D', {{0, 0, 0, 0}}}
+        {'B', {{0, -1}}},
+        {'C', {{0, -3}}},
+        {'E', {{0, 2}}},
+        {'F', {{0, -5}}},
+        {'G', {{0, -6}}},
+        {'A', {{0, 0}}},
+        {'D', {{0, 0}}}
     };
 
     vector<vector<char>> test_task2 = {
@@ -397,16 +417,16 @@ int main() {
         {'B', '.', '.', '.', 'E', '.', '.', '.', '.', '.'}
     };
 
-    vector<char> symbols_pair2 = {'B', 'C', 'F', 'G', 'A', 'E', 'D'};
+    vector<char> symbols_pair2 = {'B', 'D', 'C', 'F', 'E', 'G', 'A'};
 
     map<char, vector<Shift>> symbol_shifts2 = {
-        {'B', {{0, 0, 0, 0}}},
-        {'C', {{0, 0, 0, 0}}},
-        {'E', {{0, 0, 0, 0}}},
-        {'F', {{0, 0, 0, 0}}},
-        {'G', {{0, 0, 0, 0}}},
-        {'A', {{0, 0, 0, 0}}},
-        {'D', {{0, 0, 0, 0}}}
+        {'B', {{0, 0}}},
+        {'C', {{0, -4}}},
+        {'E', {{-1, -3}}},
+        {'F', {{-1, -4}}},
+        {'G', {{0, 0}}},
+        {'A', {{0, 0}}},
+        {'D', {{0, 0}}}
     };
 
     Menu menu(test_task1, symbols_pair1, test_task2, symbols_pair2, symbol_shifts1, symbol_shifts2);
